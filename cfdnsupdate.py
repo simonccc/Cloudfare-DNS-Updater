@@ -1,8 +1,12 @@
 import configparser
 import logging
 import json
+import os
+import sys
 from os.path import isfile
 from urllib.request import Request, urlopen
+
+os.chdir(os.path.dirname(sys.argv[0]))
 
 # Load config
 config = configparser.ConfigParser()
