@@ -3,6 +3,11 @@
 ## About
 Small python script that updates DNS record on a Cloudfare domain to achieve DDNS.
 
+## Requirements
+1. A domain you own that points to Cloudfare's nameservers
+2. A Cloudfare account
+3. Linux box & Python 3
+
 ## Usage
 
 1. Download https://github.com/mscribellito/Cloudfare-DNS-Updater/archive/master.zip
