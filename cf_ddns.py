@@ -44,28 +44,6 @@ except:
   print('ERROR: NO ZONE OR RECORD SET')
   sys.exit(1)
 
-
-# Get current IP
-print('Getting IP from:', DDNS_URL)
-current_ip_rq = Request(DDNS_URL)
-current_ip_rs = urlopen(current_ip_rq).read().decode('utf-8')
-current_ip = current_ip_rs.strip()
-print('Current IP: %s.' % current_ip)
-
-# Get previous IP
-previous_ip = None
-try:
-    with open(TMP_IP, 'r') as ip_file:
-        previous_ip = ip_file.read()
-        print('Previous IP: %s.' % previous_ip)
-except Exception as e:
-    print(str(e))
-
-# Check if IPs match
-if current_ip == previous_ip:
-    print('IP has not changed.')
-    time.sleep(SLEEP)
-
 cf_headers = {
     'X-Auth-Email': AUTH_EMAIL,
     'X-Auth-Key': AUTH_KEY,
@@ -77,17 +55,16 @@ record_id = None
 
 # Check if Cloudfare Ids saved
 if isfile(TMP_ID):
-    with open(TMP_ID, r) as cloudfare_ids_file:
+    with open(TMP_ID, 'r') as cloudfare_ids_file:
         cloudfare_ids = json.loads(cloudfare_ids_file.read())
         zone_id = cloudfare_ids['zone_id']
         record_id = cloudfare_ids['record_id']
         print('Cloudfare Ids loaded from file (zone_id=%s,record_id=%s).' % (
             zone_id, record_id))
 
-# Get zone & record Ids if they don't exist
 if (zone_id is None or record_id is None):
     try:
-        zoneurl = '%s?name=%s' % ( API_URL, ZONE ) 
+        zoneurl = '%s?name=%s' % ( API_URL, ZONE )
         zonerq = Request(zoneurl, None, cf_headers)
         zoners = json.loads(urlopen(zonerq).read().decode('utf-8'))
         zone_id = zoners['result'][0]['id']
@@ -112,27 +89,49 @@ if (zone_id is None or record_id is None):
         except Exception as e:
             print('Error getting record id: ' + str(e))
 
-# Update IP
-if zone_id and record_id:
-    updateurl = '%s/%s/dns_records/%s' % ( API_URL, zone_id, record_id ) 
+while True:
+    # Get current IP
+    print('Getting IP from:', DDNS_URL)
+    current_ip_rq = Request(DDNS_URL)
+    current_ip_rs = urlopen(current_ip_rq).read().decode('utf-8')
+    current_ip = current_ip_rs.strip()
+    print('Current IP: %s.' % current_ip)
+
+    # Get previous IP
+    previous_ip = None
     try:
-        content = json.dumps({
+        with open(TMP_IP, 'r') as ip_file:
+            previous_ip = ip_file.read()
+            print('Previous IP: %s.' % previous_ip)
+    except Exception as e:
+        print(str(e))
+
+    # Check if IPs match
+    if current_ip == previous_ip:
+        print('IP has not changed.')
+        time.sleep(SLEEP)
+
+    # Update IP
+    if zone_id and record_id:
+        updateurl = '%s/%s/dns_records/%s' % ( API_URL, zone_id, record_id ) 
+        try:
+            content = json.dumps({
             'id': zone_id,
             'type': 'A',
             'name': ZONE_R,
             'content': current_ip
-        }).encode('utf-8')
-        updaterq = Request(updateurl, data=content,
+            }).encode('utf-8')
+            updaterq = Request(updateurl, data=content,
                            method='PUT', headers=cf_headers)
-        updaterq.add_header('Content-Length', len(content))
-        updaters = urlopen(updaterq)
-        print('IP updated to %s.' % current_ip)
-        # Set current IP
-        try:
-            with open(TMP_IP, 'w') as ip_file:
-                ip_file.write(current_ip)
-                print('Saved current IP.')
+            updaterq.add_header('Content-Length', len(content))
+            updaters = urlopen(updaterq)
+            print('IP updated to %s.' % current_ip)
+            # Set current IP
+            try:
+                with open(TMP_IP, 'w') as ip_file:
+                    ip_file.write(current_ip)
+                    print('Saved current IP.')
+            except Exception as e:
+                print(str(e))
         except Exception as e:
-            print(str(e))
-    except Exception as e:
-        print('Error updating DNS record: ' + str(e))
+            print('Error updating DNS record: ' + str(e))
