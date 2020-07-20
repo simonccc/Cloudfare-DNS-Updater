@@ -8,12 +8,15 @@ Dockerised version of the great work from: https://github.com/mscribellito/Cloud
 
 # Docker
 
-'''docker pull simonczuzu/cloudflare-ddns:latest'''
+```
+docker pull simonczuzu/cloudflare-ddns:latest
+```
 
 see below for how to configure it
 
 # Example docker-compose file
-'''
+
+```
 version: '3'
 
 services:
@@ -30,4 +33,4 @@ services:
         - AUTH_KEY=kekekekekekeyy123
         - ZONE=mydnszone.com
         - ZONE_R=home.mydnszone.com
-'''
+```
