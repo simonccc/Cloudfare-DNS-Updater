@@ -9,6 +9,7 @@ services:
       environment:
 #        - DDNS_URL=http://ipv4.icanhazip.com
 #        - API_URL=https://api.cloudflare.com/client/v4/zones
+#        - SLEEP=3600
         - AUTH_EMAIL=email@email.email
         - AUTH_KEY=kekekekekekeyy123
         - ZONE=mydnszone.com
