@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
-import json, os, sys
+import json, os, sys, time
 from os.path import isfile
 from urllib.request import Request, urlopen
 
-# ?
-os.chdir(os.path.dirname(sys.argv[0]))
-
-# Load config
-#config = configparser.ConfigParser()
-#config.read('config.ini')
-
+# docker stuff
 DDNS_URL = None
 API_URL = None
 AUTH_EMAIL = None
 AUTH_KEY = None
 ZONE = None
 ZONE_R = None
+SLEEP = None
+
+TMP_IP='/tmp/ip.txt'
+TMP_ID='/tmp/cloudfare_ids.json'
+
+try:
+  SLEEP=os.environ['SLEEP']
+except:
+  SLEEP=3600
 
 try:
   DDNS_URL=os.environ['DDNS_URL']
@@ -25,7 +28,7 @@ except:
 try:
   API_URL=os.environ['AUTH_URL']
 except:
-  DDNS_URL='https://api.cloudflare.com/client/v4/zones'
+  API_URL='https://api.cloudflare.com/client/v4/zones'
 
 try:
   AUTH_EMAIL=os.environ['AUTH_EMAIL']
@@ -36,13 +39,14 @@ except:
 
 try:
   ZONE=os.environ['ZONE']
-  ZONE_R=os.environ['ZONE']
+  ZONE_R=os.environ['ZONE_R']
 except:
   print('ERROR: NO ZONE OR RECORD SET')
   sys.exit(1)
 
 
 # Get current IP
+print('Getting IP from:', DDNS_URL)
 current_ip_rq = Request(DDNS_URL)
 current_ip_rs = urlopen(current_ip_rq).read().decode('utf-8')
 current_ip = current_ip_rs.strip()
@@ -51,7 +55,7 @@ print('Current IP: %s.' % current_ip)
 # Get previous IP
 previous_ip = None
 try:
-    with open('/tmp/ip.txt', 'r') as ip_file:
+    with open(TMP_IP, 'r') as ip_file:
         previous_ip = ip_file.read()
         print('Previous IP: %s.' % previous_ip)
 except Exception as e:
@@ -60,7 +64,7 @@ except Exception as e:
 # Check if IPs match
 if current_ip == previous_ip:
     print('IP has not changed.')
-    exit(0)
+    time.sleep(SLEEP)
 
 cf_headers = {
     'X-Auth-Email': AUTH_EMAIL,
@@ -72,8 +76,8 @@ zone_id = None
 record_id = None
 
 # Check if Cloudfare Ids saved
-if isfile('/tmp/cloudfare_ids.json'):
-    with open('/tmp/cloudfare_ids.json', r) as cloudfare_ids_file:
+if isfile(TMP_ID):
+    with open(TMP_ID, r) as cloudfare_ids_file:
         cloudfare_ids = json.loads(cloudfare_ids_file.read())
         zone_id = cloudfare_ids['zone_id']
         record_id = cloudfare_ids['record_id']
@@ -83,21 +87,27 @@ if isfile('/tmp/cloudfare_ids.json'):
 # Get zone & record Ids if they don't exist
 if (zone_id is None or record_id is None):
     try:
+#        print('Requesting Cloudflare IDS')
         zoneurl = '%s?name=%s' % ( API_URL, ZONE ) 
+#        print(zoneurl)
+#        print(cf_headers)
         zonerq = Request(zoneurl, None, cf_headers)
         zoners = json.loads(urlopen(zonerq).read().decode('utf-8'))
         zone_id = zoners['result'][0]['id']
+#        print('Zone_id: ', zone_id)
     except Exception as e:
         print('Error getting zone id: ' + str(e))
 
     if zone_id:
         try:
-            detailurl = '%s/%s/dns_records?name=%s' % ( API_URL, ZONE_R ) 
+            detailurl = '%s/%s/dns_records?name=%s' % ( API_URL, zone_id, ZONE_R )
+            print(detailurl)
             detailrq = Request(detailurl, None, cf_headers)
             detailrs = json.loads(urlopen(detailrq).read().decode('utf-8'))
             record_id = detailrs['result'][0]['id']
+            print(record_id)
             try:
-                with open('/tmp/cloudfare_ids.json', 'w') as cloudfare_ids_file:
+                with open(TMP_ID, 'w') as cloudfare_ids_file:
                     cloudfare_ids_file.write(json.dumps({
                         'zone_id': zone_id,
                         'record_id': record_id
@@ -125,7 +135,7 @@ if zone_id and record_id:
         print('IP updated to %s.' % current_ip)
         # Set current IP
         try:
-            with open('/tmp/ip.txt', 'w') as ip_file:
+            with open(TMP_IP, 'w') as ip_file:
                 ip_file.write(current_ip)
                 print('Saved current IP.')
         except Exception as e:

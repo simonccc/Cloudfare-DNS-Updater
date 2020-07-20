@@ -1,3 +1,5 @@
 config.ini
 cfdnsupdate.log
 ip.txt
+docker-compose.yml
+export.txt
