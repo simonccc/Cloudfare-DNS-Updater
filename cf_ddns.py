@@ -87,25 +87,19 @@ if isfile(TMP_ID):
 # Get zone & record Ids if they don't exist
 if (zone_id is None or record_id is None):
     try:
-#        print('Requesting Cloudflare IDS')
         zoneurl = '%s?name=%s' % ( API_URL, ZONE ) 
-#        print(zoneurl)
-#        print(cf_headers)
         zonerq = Request(zoneurl, None, cf_headers)
         zoners = json.loads(urlopen(zonerq).read().decode('utf-8'))
         zone_id = zoners['result'][0]['id']
-#        print('Zone_id: ', zone_id)
     except Exception as e:
         print('Error getting zone id: ' + str(e))
 
     if zone_id:
         try:
             detailurl = '%s/%s/dns_records?name=%s' % ( API_URL, zone_id, ZONE_R )
-            print(detailurl)
             detailrq = Request(detailurl, None, cf_headers)
             detailrs = json.loads(urlopen(detailrq).read().decode('utf-8'))
             record_id = detailrs['result'][0]['id']
-            print(record_id)
             try:
                 with open(TMP_ID, 'w') as cloudfare_ids_file:
                     cloudfare_ids_file.write(json.dumps({
