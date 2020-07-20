@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import configparser
-import logging
 import json
 import os
 import sys
@@ -13,28 +12,25 @@ os.chdir(os.path.dirname(sys.argv[0]))
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-# Setup logging
-logging.basicConfig(filename=config['DEFAULT']['log_file'],
-                    format='%(asctime)s %(levelname)s - %(message)s', level=logging.INFO)
 
 # Get current IP
 current_ip_rq = Request(config['icanhazip']['url'])
 current_ip_rs = urlopen(current_ip_rq).read().decode('utf-8')
 current_ip = current_ip_rs.strip()
-logging.info('Current IP: %s.' % current_ip)
+print('Current IP: %s.' % current_ip)
 
 # Get previous IP
 previous_ip = None
 try:
     with open(config['DEFAULT']['ip_file'], 'r') as ip_file:
         previous_ip = ip_file.read()
-        logging.info('Previous IP: %s.' % previous_ip)
+        print('Previous IP: %s.' % previous_ip)
 except Exception as e:
-    logging.error(str(e))
+    print(str(e))
 
 # Check if IPs match
 if current_ip == previous_ip:
-    logging.info('IP has not changed.')
+    print('IP has not changed.')
     exit(0)
 
 cf_headers = {
@@ -52,7 +48,7 @@ if isfile(config['DEFAULT']['cloudfare_ids_file']):
         cloudfare_ids = json.loads(cloudfare_ids_file.read())
         zone_id = cloudfare_ids['zone_id']
         record_id = cloudfare_ids['record_id']
-        logging.info('Cloudfare Ids loaded from file (zone_id=%s,record_id=%s).' % (
+        print('Cloudfare Ids loaded from file (zone_id=%s,record_id=%s).' % (
             zone_id, record_id))
 
 # Get zone & record Ids if they don't exist
@@ -64,7 +60,7 @@ if (zone_id is None or record_id is None):
         zoners = json.loads(urlopen(zonerq).read().decode('utf-8'))
         zone_id = zoners['result'][0]['id']
     except Exception as e:
-        logging.error('Error getting zone id: ' + str(e))
+        print('Error getting zone id: ' + str(e))
 
     if zone_id:
         try:
@@ -79,11 +75,11 @@ if (zone_id is None or record_id is None):
                         'zone_id': zone_id,
                         'record_id': record_id
                     }))
-                logging.info('Saved Cloudfare Ids.')
+                print('Saved Cloudfare Ids.')
             except Exception as e:
-                logging.error(str(e))
+                print(str(e))
         except Exception as e:
-            logging.error('Error getting record id: ' + str(e))
+            print('Error getting record id: ' + str(e))
 
 # Update IP
 if zone_id and record_id:
@@ -100,13 +96,13 @@ if zone_id and record_id:
                            method='PUT', headers=cf_headers)
         updaterq.add_header('Content-Length', len(content))
         updaters = urlopen(updaterq)
-        logging.info('IP updated to %s.' % current_ip)
+        print('IP updated to %s.' % current_ip)
         # Set current IP
         try:
             with open(config['DEFAULT']['ip_file'], 'w') as ip_file:
                 ip_file.write(current_ip)
-                logging.info('Saved current IP.')
+                print('Saved current IP.')
         except Exception as e:
-            logging.error(str(e))
+            print(str(e))
     except Exception as e:
-        logging.error('Error updating DNS record: ' + str(e))
+        print('Error updating DNS record: ' + str(e))
