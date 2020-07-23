@@ -1,10 +1,12 @@
-# Cloudfare DNS Updater
+# Cloudflare DNS Updater
 
-Dockerised version of the great work from: https://github.com/mscribellito/Cloudfare-DNS-Updater
+container friendly version mscribellito's code here: https://github.com/mscribellito/Cloudfare-DNS-Updater
 
-## Requirements
-1. A domain you own that points to Cloudfare's nameservers
-2. the target record must already exist; so create it manually first pointing to eg 127.0.0.1
+## Cloudflare setup
+
+1. A domain you control that has NS records pointing to Cloudfare's nameservers
+2. the target dynamic dns record ( ZONE_R ) must already exist; so create it manually first pointing to eg 127.0.0.1 in the web gui
+
 
 # Docker
 
@@ -38,3 +40,5 @@ services:
         - ZONE=mydnszone.com
         - ZONE_R=home.mydnszone.com
 ```
+
+
