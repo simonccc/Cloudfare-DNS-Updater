@@ -12,7 +12,11 @@ Dockerised version of the great work from: https://github.com/mscribellito/Cloud
 docker pull simonczuzu/cloudflare-ddns:latest
 ```
 
-see below for how to configure it
+see below for an example of how to use it with eg docker-compose
+
+the hashed out values are defaults that can be changed if you want 
+
+SLEEP is how long the process waits if it detects your IP hasn't changed
 
 # Example docker-compose file
 
@@ -24,7 +28,7 @@ services:
       image: cf_ddns
       container_name: cf_ddns
       restart: unless-stopped
-      hostname: cn_ddns
+      hostname: cf_ddns
       environment:
 #        - DDNS_URL=http://ipv4.icanhazip.com
 #        - API_URL=https://api.cloudflare.com/client/v4/zones
