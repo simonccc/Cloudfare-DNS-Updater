@@ -23,7 +23,7 @@ except:
 try:
   DDNS_URL=os.environ['DDNS_URL']
 except:
-  DDNS_URL='http://ipv4.icanhazip.com'
+  DDNS_URL='http://ipv4.icanhazip.com.'
 
 try:
   API_URL=os.environ['AUTH_URL']
