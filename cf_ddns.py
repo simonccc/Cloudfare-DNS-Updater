@@ -109,7 +109,11 @@ while True:
     # Check if IPs match
     if current_ip == previous_ip:
         print('IP has not changed.')
-        time.sleep(SLEEP)
+        try:
+          SINGLE=os.environ['SINGLE']
+          exit(0)
+        except:
+          time.sleep(SLEEP)
 
     # Update IP
     if zone_id and record_id:
