@@ -8,18 +8,6 @@ container friendly version mscribellito's code here: https://github.com/mscribel
 2. the target dynamic dns record ( ZONE_R ) must already exist; so create it manually first pointing to eg 127.0.0.1 in the web gui
 
 
-# Docker
-
-```
-docker pull simonczuzu/cloudflare-ddns:latest
-```
-
-see below for an example of how to use it with eg docker-compose
-
-the hashed out values are defaults that can be changed if you want 
-
-SLEEP is how long the process waits if it detects your IP hasn't changed
-
 # Example docker-compose file
 
 ```
